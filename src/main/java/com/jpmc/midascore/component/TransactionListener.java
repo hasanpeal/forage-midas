@@ -13,11 +13,18 @@ import org.springframework.stereotype.Component;
 public class TransactionListener {
 
     private static final Logger logger = LoggerFactory.getLogger(TransactionListener.class);
+    private final DatabaseConduit databaseConduit;
+
+    public TransactionListener(DatabaseConduit databaseConduit) {
+        this.databaseConduit = databaseConduit;
+    }
 
     @KafkaHandler
     public void receive(@Payload Transaction transaction) {
-        // For Task 2 we only need to receive; logging helps debugging
-        logger.info("Received transaction: {}", transaction);
+        boolean recorded = databaseConduit.validateAndRecord(
+                transaction.getSenderId(), transaction.getRecipientId(), transaction.getAmount()
+        );
+        logger.info("Received transaction: {}, recorded={}", transaction, recorded);
     }
 }
 
